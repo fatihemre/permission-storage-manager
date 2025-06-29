@@ -1,0 +1,66 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+---
+description: Temiz, sürdürülebilir, okunabilir ve kontrol edilebilir kod yazımı ve kod inceleme kuralları. Tüm projelerde dil ve framework fark etmeksizin uygulanabilir.
+globs: ["**/*.py", "**/*.ts", "**/*.js", "**/*.php", "**/*.go", "**/*.java", "**/*.cs"]
+---
+
+# Clean Code & Code Quality Rehberi
+
+## 1. Anlamlı ve Tutarlı İsimlendirme
+- Değişken, fonksiyon, sınıf ve dosya adları ne yaptığını ve neden var olduğunu açıkça anlatmalı.
+- Anlamı belirsiz kısaltmalardan kaçınılmalı.
+- İsimlendirmeler proje genelinde tutarlı olmalı (`snake_case`, `camelCase`, vb.).
+
+## 2. Sabitler Yerine Sihirli Sayılardan Kaçının
+- Doğrudan sayısal veya string ifadeler yerine sabitler (constants) kullanılmalı.
+- Sabitler üstte veya ayrı bir dosyada toplanmalı ve amacını açıklayan isimler taşımalı.
+
+## 3. Fonksiyonlar ve Sorumluluk
+- Her fonksiyon yalnızca **tek bir işi** yapmalı (Single Responsibility).
+- Fonksiyonlar küçük ve odaklı olmalı.
+- Bir fonksiyonun ne yaptığı ekstra yorumla anlatılıyorsa, bölünmelidir.
+
+## 4. Yorumlar – Az ama Öz
+- Kod ne yaptığıyla ilgili değil, **neden** böyle yapıldığını açıklayan yorumlar içermeli.
+- Karmaşık algoritmalar, teknik sınırlamalar veya framework’e özgü yaklaşımlar mutlaka belgelenmeli.
+- Kod mümkün olduğunca kendini açıklamalı, yorumlara bağımlı olmamalı.
+
+## 5. Kod Tekrarından Kaçının (DRY)
+- Aynı işlemler tekrar ediyorsa, yeniden kullanılabilir fonksiyonlara çıkarılmalı.
+- Ortak iş mantığı merkezi hale getirilmeli.
+- Tek kaynaktan yönetilen (single source of truth) yapı kurulmalı.
+
+## 6. Temiz ve Anlaşılır Yapı
+- Kod modüler olmalı; ilgili dosya ve fonksiyonlar mantıksal olarak gruplanmalı.
+- Proje hiyerarşisi okunabilir ve mantıklı olmalı.
+- Dosya/klasör yapısı karışık veya tek dosyalı (god object) hale getirilmemeli.
+
+## 7. Kapsülleme ve Erken Dönüş
+- İç detaylar dış modüllere sızdırılmamalı.
+- İç içe `if`/`else` blokları sadeleştirilmeli, erken dönüş (`return early`) tercih edilmeli.
+- Şartlar iyi isimlendirilmiş yardımcı fonksiyonlara ayrılmalı.
+
+## 8. Kod Kalitesinin Sürekli Korunması
+- Teknik borçlar biriktirilmeden temizlenmeli.
+- Kodun değiştirildiği yerde refactor yapılmalı.
+- Kod bulunduğundan daha iyi bırakılmalı.
+
+## 9. Test Edilebilirlik
+- Yazılan kod test edilebilir olmalı; karmaşık bağımlılıklar izole edilebilmeli.
+- Edge case'ler ve hata durumları için test yazılmalı.
+- Testler anlaşılır ve sürdürülebilir olmalı.
+
+## 10. Kod Gözden Geçirme Kalitesi
+- Yalnızca kullanıcı tarafından açıkça talep edilen dosya veya kodlar düzenlenmeli.
+- `git add .` gibi tüm dosyayı kapsayan işlemler yerine, dosya bazlı değişiklik tercih edilmeli.
+- Yorumlar:
+  - Özür, onay isteği, özetleme, tekrar anlatım gibi gereksiz ifadeler içermemeli.
+  - Mevcut implementasyonu açıklamak yerine, gerekirse sadece öneri yapılmalı.
+- Değişiklikler tek parça halinde sunulmalı; parça parça adım anlatılmamalı.
+- Değişiklik gerekmeyen dosyalara müdahale edilmemeli.
+- Her değişiklik **tek sorumluluğa** sahip, temiz ve bağımsız olmalı.
+

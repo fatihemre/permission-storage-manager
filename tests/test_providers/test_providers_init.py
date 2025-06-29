@@ -160,7 +160,7 @@ class TestProvidersInitCoverage:
         # Test with non-existent provider
         info = get_provider_info("non_existent_provider")
         assert info == {}  # Returns empty dict for non-existent providers
-        
+
         # Test with None - should return all providers
         all_info = get_provider_info(None)
         assert isinstance(all_info, dict)
@@ -171,16 +171,16 @@ class TestProvidersInitCoverage:
     def test_provider_registration_and_retrieval(self):
         """Test provider registration and retrieval."""
         from permission_storage_manager.providers import get_provider_class
-        
+
         # Test that all built-in providers are available
         redis_class = get_provider_class("redis")
         memory_class = get_provider_class("memory")
         file_class = get_provider_class("file")
-        
+
         assert redis_class is not None
         assert memory_class is not None
         assert file_class is not None
-        
+
         # Test that provider names match
         assert redis_class().provider_name == "redis"
         assert memory_class().provider_name == "memory"

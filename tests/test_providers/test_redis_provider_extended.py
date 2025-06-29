@@ -1,14 +1,7 @@
 import asyncio
-import json
-import tempfile
-from datetime import datetime, timezone
-from typing import Dict, List
-
 import pytest
-from unittest.mock import AsyncMock, patch
 
 from permission_storage_manager.providers.redis_provider import RedisProvider
-from permission_storage_manager.core.exceptions import ProviderError, SerializationError
 
 
 class TestRedisProviderEdgeCases:

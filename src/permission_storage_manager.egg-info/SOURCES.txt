@@ -9,4 +9,7 @@ src/permission_storage_manager.egg-info/dependency_links.txt
 src/permission_storage_manager.egg-info/entry_points.txt
 src/permission_storage_manager.egg-info/requires.txt
 src/permission_storage_manager.egg-info/top_level.txt
+tests/test_core_extended.py
 tests/test_manager.py
+tests/test_utils.py
+tests/test_utils_extended.py

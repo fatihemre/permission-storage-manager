@@ -78,8 +78,12 @@ Dynamic: license-file
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![PyPI version](https://badge.fury.io/py/permission-storage-manager.svg)](https://badge.fury.io/py/permission-storage-manager)
+[![PyPI downloads](https://img.shields.io/pypi/dm/permission-storage-manager.svg)](https://pypi.org/project/permission-storage-manager/)
 [![Tests](https://img.shields.io/badge/tests-passing-green.svg)](https://github.com/fatihemre/permission-storage-manager)
-[![Coverage](https://img.shields.io/badge/coverage-95%25-green.svg)](https://github.com/fatihemre/permission-storage-manager)
+[![Coverage](https://img.shields.io/badge/coverage-88%25-green.svg)](https://github.com/fatihemre/permission-storage-manager)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 
 A flexible, high-performance permission storage system for Python applications. Store and manage user permissions across different storage backends with a unified API.
 
@@ -92,13 +96,15 @@ A flexible, high-performance permission storage system for Python applications. 
 - **🎯 High Performance**: Optimized for speed and concurrent access
 - **🔧 Extensible**: Easy to add custom storage providers
 - **📦 Zero Dependencies**: Memory and File providers require no external dependencies
-- **🧪 Well Tested**: Comprehensive test suite with 95%+ coverage
+- **🧪 Well Tested**: Comprehensive test suite with 88%+ coverage
+- **🚀 Production Ready**: Battle-tested with comprehensive error handling
 
 ## 🚀 Quick Start
 
 ### Installation
 
 ```bash
+# Basic installation (Memory and File providers)
 pip install permission-storage-manager
 
 # With Redis support
@@ -106,38 +112,66 @@ pip install permission-storage-manager[redis]
 
 # With all dependencies
 pip install permission-storage-manager[all]
+
+# For development
+pip install permission-storage-manager[dev]
 ```
 
 ### Basic Usage
 
 ```python
+import asyncio
 from permission_storage_manager import PermissionStorageManager
 
-# Create manager with memory provider (no dependencies)
+async def main():
+    # Create manager with memory provider (no dependencies)
+    manager = PermissionStorageManager("memory")
+    
+    # Store user permissions
+    await manager.store_permissions(
+        session_id="session_123",
+        user_id="user_456",
+        permissions=["read", "write", "admin"],
+        ttl=3600  # 1 hour
+    )
+    
+    # Check permissions
+    has_read = await manager.check_permission("session_123", "read")
+    print(f"Has read permission: {has_read}")  # True
+    
+    # Check multiple permissions
+    results = await manager.check_permissions("session_123", ["read", "delete"])
+    print(f"Permission results: {results}")  # {"read": True, "delete": False}
+    
+    # Get all permissions
+    data = await manager.get_permissions("session_123")
+    print(f"User permissions: {data['permissions']}")  # ["read", "write", "admin"]
+    
+    # Clean up
+    await manager.invalidate_session("session_123")
+    await manager.close()
+
+# Run the example
+asyncio.run(main())
+```
+
+### Synchronous Usage
+
+```python
+from permission_storage_manager import PermissionStorageManager
+
+# Create manager
 manager = PermissionStorageManager("memory")
 
-# Store user permissions
-await manager.store_permissions(
-    session_id="session_123",
-    user_id="user_456",
-    permissions=["read", "write", "admin"],
-    ttl=3600  # 1 hour
-)
+# Store permissions (sync)
+manager.store_permissions_sync("session_123", "user_456", ["read", "write"])
 
-# Check permissions
-has_read = await manager.check_permission("session_123", "read")
-print(has_read)  # True
-
-# Check multiple permissions
-results = await manager.check_permissions("session_123", ["read", "delete"])
-print(results)  # {"read": True, "delete": False}
-
-# Get all permissions
-data = await manager.get_permissions("session_123")
-print(data["permissions"])  # ["read", "write", "admin"]
+# Check permissions (sync)
+has_read = manager.check_permission_sync("session_123", "read")
+print(f"Has read permission: {has_read}")  # True
 
 # Clean up
-await manager.invalidate_session("session_123")
+manager.close()
 ```
 
 ### Provider Comparison
@@ -563,6 +597,83 @@ pytest tests/ -m slow
 
 # With coverage
 pytest tests/ --cov=permission_storage_manager --cov-report=html
+```
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+#### Redis Connection Errors
+
+```python
+# Error: Connection refused
+# Solution: Check Redis server is running
+redis-server --port 6379
+
+# Error: Authentication failed
+# Solution: Check password in config
+config = {
+    "url": "redis://:password@localhost:6379/0"
+}
+```
+
+#### Memory Provider Issues
+
+```python
+# Error: Too many sessions
+# Solution: Increase max_sessions or cleanup more frequently
+config = {
+    "max_sessions": 50000,
+    "cleanup_interval": 30
+}
+```
+
+#### File Provider Issues
+
+```python
+# Error: Permission denied
+# Solution: Check directory permissions
+import os
+os.chmod("/var/lib/app/permissions", 0o755)
+
+# Error: Disk space full
+# Solution: Enable compression or cleanup old files
+config = {
+    "compress_files": True,
+    "max_backup_files": 3
+}
+```
+
+#### General Issues
+
+```python
+# Error: Provider not initialized
+# Solution: Ensure auto_initialize=True or call initialize()
+manager = PermissionStorageManager("redis", config, auto_initialize=True)
+
+# Error: Session expired
+# Solution: Check TTL settings and extend if needed
+await manager.extend_session_ttl(session_id, 3600)
+```
+
+### Performance Tips
+
+- **Use connection pooling** for Redis in production
+- **Enable compression** for File provider with large datasets
+- **Set appropriate TTL** to prevent memory bloat
+- **Use bulk operations** for multiple sessions
+- **Monitor memory usage** with Memory provider
+
+### Debug Mode
+
+```python
+import logging
+
+# Enable debug logging
+logging.basicConfig(level=logging.DEBUG)
+
+# Or for specific provider
+logging.getLogger("permission_storage_manager.providers.redis").setLevel(logging.DEBUG)
 ```
 
 ## 📋 Requirements

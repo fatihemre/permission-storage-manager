@@ -683,7 +683,7 @@ class TestInitModuleFunctions:
     def test_get_version(self):
         """Test get_version function."""
         from permission_storage_manager import get_version
-        
+
         version = get_version()
         assert isinstance(version, str)
         assert version == "1.0.0"
@@ -691,7 +691,7 @@ class TestInitModuleFunctions:
     def test_get_supported_providers(self):
         """Test get_supported_providers function."""
         from permission_storage_manager import get_supported_providers
-        
+
         providers = get_supported_providers()
         assert isinstance(providers, list)
         assert "redis" in providers
@@ -701,12 +701,12 @@ class TestInitModuleFunctions:
     def test_create_manager_convenience_function(self):
         """Test create_manager convenience function."""
         from permission_storage_manager import create_manager
-        
+
         # Test with default parameters
         manager = create_manager()
         assert manager.provider_name == "memory"
         assert manager.default_ttl == 3600
-        
+
         # Test with custom parameters
         manager = create_manager("memory", {"test": True}, 7200)
         assert manager.provider_name == "memory"
@@ -718,8 +718,10 @@ class TestExceptionCoverage:
 
     def test_provider_not_initialized_error(self):
         """Test ProviderNotInitializedError with provider name."""
-        from permission_storage_manager.core.exceptions import ProviderNotInitializedError
-        
+        from permission_storage_manager.core.exceptions import (
+            ProviderNotInitializedError,
+        )
+
         error = ProviderNotInitializedError("test_provider")
         assert "test_provider" in str(error)
         assert "not initialized" in str(error)
@@ -727,7 +729,7 @@ class TestExceptionCoverage:
     def test_provider_not_supported_error_with_available_providers(self):
         """Test ProviderNotSupportedError with available providers list."""
         from permission_storage_manager.core.exceptions import ProviderNotSupportedError
-        
+
         available = ["redis", "memory", "file"]
         error = ProviderNotSupportedError("invalid_provider", available)
         assert "invalid_provider" in str(error)
@@ -737,7 +739,7 @@ class TestExceptionCoverage:
     def test_provider_not_supported_error_without_available_providers(self):
         """Test ProviderNotSupportedError without available providers list."""
         from permission_storage_manager.core.exceptions import ProviderNotSupportedError
-        
+
         error = ProviderNotSupportedError("invalid_provider")
         assert "invalid_provider" in str(error)
         assert error.details["available_providers"] == []
@@ -745,7 +747,7 @@ class TestExceptionCoverage:
     def test_operation_timeout_error(self):
         """Test OperationTimeoutError."""
         from permission_storage_manager.core.exceptions import OperationTimeoutError
-        
+
         error = OperationTimeoutError("test_operation", 5.0)
         assert "test_operation" in str(error)
         assert "5.0" in str(error)
@@ -755,7 +757,7 @@ class TestExceptionCoverage:
     def test_concurrency_error(self):
         """Test ConcurrencyError."""
         from permission_storage_manager.core.exceptions import ConcurrencyError
-        
+
         error = ConcurrencyError("test_operation", "session_123")
         assert "test_operation" in str(error)
         assert "session_123" in str(error)
@@ -765,7 +767,7 @@ class TestExceptionCoverage:
     def test_storage_quota_exceeded_error(self):
         """Test StorageQuotaExceededError."""
         from permission_storage_manager.core.exceptions import StorageQuotaExceededError
-        
+
         error = StorageQuotaExceededError("test_provider", "memory")
         assert "test_provider" in str(error)
         assert "memory" in str(error)
@@ -775,7 +777,7 @@ class TestExceptionCoverage:
     def test_storage_quota_exceeded_error_default_quota_type(self):
         """Test StorageQuotaExceededError with default quota type."""
         from permission_storage_manager.core.exceptions import StorageQuotaExceededError
-        
+
         error = StorageQuotaExceededError("test_provider")
         assert "test_provider" in str(error)
         assert "storage" in str(error)

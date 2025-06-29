@@ -3,13 +3,8 @@ Tests for Redis provider implementation.
 """
 
 import asyncio
-import json
-import tempfile
-from datetime import datetime, timezone
-from typing import Dict, List
-
 import pytest
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 import redis
 
 from permission_storage_manager.providers.redis_provider import RedisProvider
