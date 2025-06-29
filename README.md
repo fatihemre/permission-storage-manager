@@ -5,7 +5,7 @@
 [![PyPI version](https://badge.fury.io/py/permission-storage-manager.svg)](https://badge.fury.io/py/permission-storage-manager)
 [![PyPI downloads](https://img.shields.io/pypi/dm/permission-storage-manager.svg)](https://pypi.org/project/permission-storage-manager/)
 [![Tests](https://img.shields.io/badge/tests-passing-green.svg)](https://github.com/fatihemre/permission-storage-manager)
-[![Coverage](https://img.shields.io/badge/coverage-95%25-green.svg)](https://github.com/fatihemre/permission-storage-manager)
+[![Coverage](https://img.shields.io/badge/coverage-88%25-green.svg)](https://github.com/fatihemre/permission-storage-manager)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Imports: isort](https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336)](https://pycqa.github.io/isort/)
 
@@ -20,7 +20,7 @@ A flexible, high-performance permission storage system for Python applications. 
 - **🎯 High Performance**: Optimized for speed and concurrent access
 - **🔧 Extensible**: Easy to add custom storage providers
 - **📦 Zero Dependencies**: Memory and File providers require no external dependencies
-- **🧪 Well Tested**: Comprehensive test suite with 95%+ coverage
+- **🧪 Well Tested**: Comprehensive test suite with 88%+ coverage
 - **🚀 Production Ready**: Battle-tested with comprehensive error handling
 
 ## 🚀 Quick Start
