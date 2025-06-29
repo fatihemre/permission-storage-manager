@@ -1,0 +1,122 @@
+# .cursorrules
+
+# ================================
+# 📌 GENEL KURALLAR
+# ================================
+
+agent_name: cursor
+project_name: permission-storage-manager
+
+# AI agent sadece src/ dizini altındaki modüllerle çalışabilir.
+allowed_paths:
+  - src/permission_storage_manager/**
+  - tests/**
+  - pyproject.toml
+  - setup.py
+  - README.md
+  - CHANGELOG.md
+
+# AI agent aşağıdaki dosyalara dokunamaz:
+blocked_paths:
+  - .git/**
+  - .venv/**
+  - dist/**
+  - build/**
+  - docs/**
+
+# AI agent aşağıdaki dosya türlerini oluşturamaz veya düzenleyemez:
+blocked_extensions:
+  - .exe
+  - .bin
+  - .dll
+
+# ================================
+# 📌 KOD KALİTESİ VE STİL
+# ================================
+
+# Tüm Python kodu PEP8 uyumlu olmalı.
+code_style:
+  enforce_pep8: true
+  enforce_type_hints: true
+  enforce_docstrings: true
+  max_line_length: 88
+  format_tool: black
+
+# Her public sınıf ve fonksiyon için docstring zorunlu.
+require_docstrings: true
+
+# Yorumlar Türkçe veya İngilizce olabilir, karışık olamaz.
+allowed_comment_languages:
+  - en
+
+# ================================
+# 📌 TEST VE KAPSAMA
+# ================================
+
+# Yeni veya değiştirilen her özellik için test yazmak zorunlu.
+require_tests_for_new_code: true
+
+# Tüm testler tests/ klasöründe olmalı.
+test_path: tests/**
+
+# Test kapsamı 90% altına inemez.
+minimum_test_coverage: 90
+
+# ================================
+# 📌 COMMIT VE PR KURALLARI
+# ================================
+
+# AI agent otomatik commit mesajlarını Conventional Commits formatında yazmalı.
+commit_message_convention: conventional
+
+# PR başlıkları da Conventional Commits kurallarına uymalı.
+pr_title_convention: conventional
+
+# ================================
+# 📌 GÜVENLİK VE LİSANS
+# ================================
+
+# AI agent, paket lisans dosyasına müdahale edemez.
+blocked_files:
+  - LICENSE
+
+# AI agent, yetkisiz bağımlılık ekleyemez.
+allow_dependency_changes: false
+
+# ================================
+# 📌 EK YASAKLAR
+# ================================
+
+# AI agent, dosya sistemi üzerinde destructive işlem (dosya silme) yapamaz.
+allow_file_deletion: false
+
+# AI agent, async API'leri sync API'lerle değiştiremez.
+forbidden_patterns:
+  - "async def" -> "def"
+
+# ================================
+# 📌 OTONOM EYLEMLER
+# ================================
+
+# AI agent yeni storage provider oluşturabilir ancak core API'yi silemez.
+allow_new_providers: true
+allow_core_api_modification: false
+
+# AI agent logging düzeyini DEBUG seviyesinden INFO seviyesine indiremez.
+forbidden_logging_levels:
+  - DEBUG -> INFO
+
+# ================================
+# 📌 İLETİŞİM TARZI
+# ================================
+
+# AI agent kullanıcıyla Türkçe iletişim kurmalı, kod içi içerik İngilizce olmalı.
+ui_language: tr
+code_language: en
+
+# ================================
+# 📌 DENETİM
+# ================================
+
+# Tüm AI değişiklikleri manuel gözden geçirilmeli.
+manual_review_required: true
