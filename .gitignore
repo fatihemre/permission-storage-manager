@@ -49,3 +49,6 @@ ENV/
 # Coverage reports (already covered above, but explicit)
 .coverage
 coverage.xml
+
+# macOS
+.DS_Store

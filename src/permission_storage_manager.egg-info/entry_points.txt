@@ -1,2 +1,0 @@
-[console_scripts]
-permission-manager = permission_storage_manager.cli:main

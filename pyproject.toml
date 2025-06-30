@@ -108,8 +108,10 @@ Repository = "https://github.com/fatihemre/permission-storage-manager.git"
 permission-manager = "permission_storage_manager.cli:main"
 
 [tool.setuptools]
-packages = ["permission_storage_manager"]
 package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.setuptools.package-data]
 permission_storage_manager = ["py.typed"]
