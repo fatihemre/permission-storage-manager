@@ -45,3 +45,7 @@ ENV/
 # Cursor AI
 .cursor/
 .cursorrules
+
+# Coverage reports (already covered above, but explicit)
+.coverage
+coverage.xml

@@ -612,7 +612,7 @@ def get_version_info() -> Dict[str, str]:
     return {
         "python_version": sys.version,
         "platform": platform.platform(),
-        "psm_version": "1.0.0",  # This would be dynamic in real implementation
+        "psm_version": "1.0.1",  # This would be dynamic in real implementation
     }
 
 

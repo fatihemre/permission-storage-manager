@@ -29,6 +29,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.1] - 2025-01-XX
+
+### Fixed
+- Fixed linting issues including unused imports and bare except statements
+- Resolved CI/CD workflow issues with Python 3.1 cache problems
+- Fixed test failures in file provider TTL tests and Redis provider availability tests
+- Improved error handling in RedisProvider initialization
+
+### Changed
+- Enhanced test coverage to exceed 90% target (now at 91%)
+- Added comprehensive edge case tests for memory provider, helpers, and manager
+- Improved code quality by removing unused imports and fixing code style issues
+- Enhanced CI/CD pipeline reliability with better cache management
+
+### Added
+- Additional test cases for sync wrapper methods in PermissionStorageManager
+- Edge case tests for provider error handling and initialization
+- Comprehensive test coverage for utility functions in helpers.py
+- Performance and reliability improvements in test suite
+
+---
+
 ## [1.0.0] - 2025-01-XX
 
 ### Added
