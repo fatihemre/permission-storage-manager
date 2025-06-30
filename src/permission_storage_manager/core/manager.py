@@ -198,7 +198,7 @@ class PermissionStorageManager:
         metadata.update(
             {
                 "created_at": datetime.utcnow().isoformat(),
-                "manager_version": "1.0.0",  # Will be dynamic in real implementation
+                "manager_version": "1.0.2",  # Will be dynamic in real implementation
             }
         )
 

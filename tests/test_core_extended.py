@@ -684,7 +684,7 @@ class TestInitModuleFunctions:
 
         version = get_version()
         assert isinstance(version, str)
-        assert version == "1.0.0"
+        assert version == "1.0.2"
 
     def test_get_supported_providers(self):
         """Test get_supported_providers function."""

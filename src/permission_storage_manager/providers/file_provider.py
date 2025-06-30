@@ -166,7 +166,7 @@ class FileProvider(BaseProvider):
                 metadata = {
                     "created_at": datetime.now(timezone.utc).isoformat(),
                     "provider": "file",
-                    "version": "1.0.0",
+                    "version": "1.0.2",
                 }
                 await self._write_file(self._metadata_file, metadata)
 

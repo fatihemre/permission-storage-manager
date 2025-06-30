@@ -40,7 +40,7 @@ from .exceptions import (
 )
 
 # Version info
-__version__ = "1.0.0"
+__version__ = "1.0.2"
 __author__ = "Fatih Emre"
 __email__ = "info@fatihemre.net"
 
