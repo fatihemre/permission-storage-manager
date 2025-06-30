@@ -3,14 +3,9 @@ Tests for Memory provider implementation.
 """
 
 import asyncio
-import json
-import tempfile
 import time
-from datetime import datetime, timezone
-from typing import Dict, List
 
 import pytest
-from unittest.mock import AsyncMock, patch
 
 from permission_storage_manager.providers.memory_provider import MemoryProvider
 from permission_storage_manager.core.exceptions import ProviderError
@@ -861,7 +856,6 @@ class TestMemoryProviderPerformance:
     @pytest.mark.slow
     async def test_memory_usage_growth(self, memory_provider):
         """Test memory usage growth characteristics."""
-        import sys
 
         # Get initial memory usage
         initial_sessions = len(memory_provider._sessions)
@@ -1057,3 +1051,202 @@ class TestMemoryProviderContextManager:
 
         # Should be closed after context
         assert not provider.is_initialized
+
+
+def make_provider(config=None):
+    provider = MemoryProvider(config or {})
+    asyncio.get_event_loop().run_until_complete(provider.initialize())
+    return provider
+
+class TestMemoryProviderEdgeCasesCoverage:
+    def test_closed_provider_raises(self):
+        provider = MemoryProvider()
+        # Kapalıyken işlem
+        with pytest.raises(ProviderError):
+            asyncio.get_event_loop().run_until_complete(provider.store_permissions("s1", "u1", ["p1"]))
+
+    def test_max_sessions_limit(self):
+        provider = MemoryProvider({"max_sessions": 2})
+        asyncio.get_event_loop().run_until_complete(provider.initialize())
+        # 2 session ekle, 3. hata vermeli
+        asyncio.get_event_loop().run_until_complete(provider.store_permissions("s1", "u1", ["p1"]))
+        asyncio.get_event_loop().run_until_complete(provider.store_permissions("s2", "u1", ["p2"]))
+        with pytest.raises(ProviderError):
+            asyncio.get_event_loop().run_until_complete(provider.store_permissions("s3", "u1", ["p3"]))
+
+    def test_clear_all_sessions(self):
+        provider = make_provider()
+        asyncio.get_event_loop().run_until_complete(provider.store_permissions("s1", "u1", ["p1"]))
+        asyncio.get_event_loop().run_until_complete(provider.store_permissions("s2", "u2", ["p2"]))
+        count = asyncio.get_event_loop().run_until_complete(provider.clear_all_sessions())
+        assert count == 2
+        # Sonra tekrar clear, sıfır dönmeli
+        count2 = asyncio.get_event_loop().run_until_complete(provider.clear_all_sessions())
+        assert count2 == 0
+
+    def test_ttl_expiry_and_cleanup(self):
+        provider = make_provider({"cleanup_interval": 1})
+        asyncio.get_event_loop().run_until_complete(provider.store_permissions("s1", "u1", ["p1"], ttl=1))
+        time.sleep(2)
+        # Cleanup expired
+        cleaned = asyncio.get_event_loop().run_until_complete(provider.cleanup_expired_sessions())
+        assert cleaned >= 1
+        # Session artık yok
+        perms = asyncio.get_event_loop().run_until_complete(provider.get_permissions("s1"))
+        assert perms is None
+
+    def test_get_memory_stats_and_properties(self):
+        provider = make_provider()
+        stats = asyncio.get_event_loop().run_until_complete(provider.get_memory_stats())
+        assert stats["provider"] == "memory"
+        assert provider.provider_name == "memory"
+        assert provider.supports_ttl is True
+
+    def test_error_handling_paths(self):
+        provider = make_provider()
+        # Hatalı invalidate
+        res = asyncio.get_event_loop().run_until_complete(provider.invalidate_session("notfound"))
+        assert res is False
+        # Hatalı update
+        res2 = asyncio.get_event_loop().run_until_complete(provider.update_permissions("notfound", ["p1"]))
+        assert res2 is False
+        # Hatalı extend ttl
+        res3 = asyncio.get_event_loop().run_until_complete(provider.extend_session_ttl("notfound", 10))
+        assert res3 is False
+        # Hatalı get_session_info
+        res4 = asyncio.get_event_loop().run_until_complete(provider.get_session_info("notfound"))
+        assert res4 is None
+        # Hatalı get_permissions
+        res5 = asyncio.get_event_loop().run_until_complete(provider.get_permissions("notfound"))
+        assert res5 is None
+        # Hatalı list_sessions (user yok)
+        res6 = asyncio.get_event_loop().run_until_complete(provider.list_sessions(user_id="nouser"))
+        assert res6 == []
+
+    def test_background_task_exception_handling(self):
+        """Test background task exception handling paths."""
+        provider = MemoryProvider({"cleanup_interval": 0.1})
+        asyncio.get_event_loop().run_until_complete(provider.initialize())
+        
+        # Background task'ların exception handling path'lerini tetikle
+        # Bu test, _cleanup_loop ve _monitoring_loop'taki exception handling'i kapsar
+        time.sleep(0.2)  # Background task'ların çalışması için bekle
+        
+        # Provider'ı kapat, cancel path'lerini tetikle
+        asyncio.get_event_loop().run_until_complete(provider.close())
+
+    def test_peak_session_count_update(self):
+        """Test peak session count statistics update."""
+        provider = make_provider()
+        
+        # Çoklu session ekleyerek peak count'u artır
+        for i in range(10):
+            asyncio.get_event_loop().run_until_complete(
+                provider.store_permissions(f"s{i}", f"u{i}", ["p1"])
+            )
+        
+        # _update_stats metodunu çağır
+        provider._update_stats()
+        
+        stats = asyncio.get_event_loop().run_until_complete(provider.get_memory_stats())
+        assert stats["peak_session_count"] >= 10
+
+    def test_monitoring_task_disabled(self):
+        """Test monitoring task when disabled."""
+        provider = MemoryProvider({"enable_monitoring": False})
+        asyncio.get_event_loop().run_until_complete(provider.initialize())
+        
+        # Monitoring task disabled olduğunda _monitoring_task None olmalı
+        assert provider._monitoring_task is None
+        
+        asyncio.get_event_loop().run_until_complete(provider.close())
+
+    def test_cleanup_with_no_expired_sessions(self):
+        """Test cleanup when no sessions are expired."""
+        provider = make_provider()
+        
+        # Expired olmayan session ekle
+        asyncio.get_event_loop().run_until_complete(
+            provider.store_permissions("s1", "u1", ["p1"], ttl=3600)
+        )
+        
+        # Cleanup çağır, 0 dönmeli
+        cleaned = asyncio.get_event_loop().run_until_complete(provider.cleanup_expired_sessions())
+        assert cleaned == 0
+
+    def test_remove_session_internal_edge_cases(self):
+        """Test _remove_session_internal edge cases."""
+        provider = make_provider()
+        
+        # Session ekle
+        asyncio.get_event_loop().run_until_complete(
+            provider.store_permissions("s1", "u1", ["p1"])
+        )
+        
+        # _remove_session_internal'ı direkt çağır (lock assumed)
+        with provider._lock:
+            provider._remove_session_internal("s1")
+        
+        # Session artık yok
+        perms = asyncio.get_event_loop().run_until_complete(provider.get_permissions("s1"))
+        assert perms is None
+
+    def test_ttl_remaining_calculation(self):
+        """Test TTL remaining calculation in get_session_info."""
+        provider = make_provider()
+        
+        # TTL ile session ekle
+        asyncio.get_event_loop().run_until_complete(
+            provider.store_permissions("s1", "u1", ["p1"], ttl=10)
+        )
+        
+        # get_session_info çağır, TTL remaining hesaplanmalı
+        info = asyncio.get_event_loop().run_until_complete(provider.get_session_info("s1"))
+        assert info["has_ttl"] is True
+        assert info["ttl_remaining"] is not None
+        assert info["ttl_remaining"] > 0
+
+    def test_session_with_no_ttl_info(self):
+        """Test get_session_info for session without TTL."""
+        provider = make_provider()
+        
+        # TTL olmadan session ekle
+        asyncio.get_event_loop().run_until_complete(
+            provider.store_permissions("s1", "u1", ["p1"])
+        )
+        
+        # get_session_info çağır
+        info = asyncio.get_event_loop().run_until_complete(provider.get_session_info("s1"))
+        assert info["has_ttl"] is False
+        assert info["ttl_remaining"] is None
+
+    def test_list_sessions_pagination_edge_cases(self):
+        """Test list_sessions pagination edge cases."""
+        provider = make_provider()
+        
+        # Çoklu session ekle
+        for i in range(5):
+            asyncio.get_event_loop().run_until_complete(
+                provider.store_permissions(f"s{i}", f"u{i}", ["p1"])
+            )
+        
+        # Offset > total sessions
+        result = asyncio.get_event_loop().run_until_complete(
+            provider.list_sessions(limit=10, offset=10)
+        )
+        assert result == []
+        
+        # Limit 0
+        result2 = asyncio.get_event_loop().run_until_complete(
+            provider.list_sessions(limit=0)
+        )
+        assert result2 == []
+
+    def test_clear_all_sessions_after_close(self):
+        """Test clear_all_sessions after provider is closed."""
+        provider = make_provider()
+        asyncio.get_event_loop().run_until_complete(provider.close())
+        
+        # Kapalı provider ile clear_all_sessions çağır
+        with pytest.raises(ProviderError):
+            asyncio.get_event_loop().run_until_complete(provider.clear_all_sessions())

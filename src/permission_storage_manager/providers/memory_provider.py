@@ -3,11 +3,10 @@ In-memory permission storage provider.
 """
 
 import asyncio
-import json
 import logging
 import threading
 import time
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 from datetime import datetime, timezone
 from collections import defaultdict
 import copy
@@ -15,16 +14,6 @@ import copy
 from ..core.base import BaseProvider
 from ..core.exceptions import (
     ProviderError,
-    SerializationError,
-    ValidationError,
-)
-from ..utils.helpers import (
-    calculate_expiry_time,
-    format_ttl_remaining,
-    is_expired,
-    normalize_permissions,
-    normalize_session_id,
-    sanitize_metadata,
 )
 
 logger = logging.getLogger(__name__)

@@ -1,6 +1,5 @@
 import asyncio
 import pytest
-from unittest.mock import AsyncMock, patch
 
 from permission_storage_manager.core.base import BaseProvider
 from permission_storage_manager.core.exceptions import (
@@ -521,7 +520,6 @@ class TestManagerSyncMethods:
     def test_manager_sync_methods_import_asyncio(self):
         """Test that manager sync methods properly import asyncio."""
         from permission_storage_manager import PermissionStorageManager
-        from permission_storage_manager.providers.memory_provider import MemoryProvider
 
         # Create manager with memory provider
         manager = PermissionStorageManager(provider="memory", auto_initialize=True)

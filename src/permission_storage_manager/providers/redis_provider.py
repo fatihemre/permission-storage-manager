@@ -5,7 +5,7 @@ Redis-based permission storage provider.
 import asyncio
 import json
 import logging
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional
 from datetime import datetime, timezone
 
 import redis.asyncio as redis
@@ -16,18 +16,7 @@ from ..core.exceptions import (
     ProviderError,
     ProviderConnectionError,
     ProviderConfigurationError,
-    SessionNotFoundError,
     SerializationError,
-    OperationTimeoutError,
-    ValidationError,
-)
-from ..utils.helpers import (
-    calculate_expiry_time,
-    format_ttl_remaining,
-    is_expired,
-    normalize_permissions,
-    normalize_session_id,
-    sanitize_metadata,
 )
 
 logger = logging.getLogger(__name__)
@@ -88,6 +77,12 @@ class RedisProvider(BaseProvider):
             ProviderConfigurationError: If Redis is not available or config is invalid
         """
         super().__init__(config)
+
+        # Check if redis is available
+        try:
+            import redis.asyncio as redis
+        except ImportError:
+            raise ProviderConfigurationError("Redis is not available")
 
         # Default configuration
         self._config = {

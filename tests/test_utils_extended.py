@@ -483,3 +483,68 @@ class TestUtilsHelpersCoverage:
         }
         result = sanitize_metadata(complex_data, max_depth=3)
         assert result["level1"]["level2"]["level3"] == "[TRUNCATED]"
+
+
+class TestHelpersEdgeCases:
+    """Test edge cases and uncovered lines in helpers.py."""
+
+    def test_parse_provider_url_with_query_params(self):
+        """Test parse_provider_url with query parameters to cover lines 494-497."""
+        from permission_storage_manager.utils.helpers import parse_provider_url
+
+        # Test with boolean query params
+        url = "redis://localhost:6379/0?ssl=true&timeout=5.0&retry=false"
+        config = parse_provider_url(url)
+        assert config["ssl"] is True
+        assert config["timeout"] == 5.0
+        assert config["retry"] is False
+
+        # Test with numeric query params
+        url = "redis://localhost:6379/0?max_connections=10&pool_size=5"
+        config = parse_provider_url(url)
+        assert config["max_connections"] == 10
+        assert config["pool_size"] == 5
+
+        # Test with string query params
+        url = "redis://localhost:6379/0?password=secret&username=admin"
+        config = parse_provider_url(url)
+        assert config["password"] == "secret"
+        assert config["username"] == "admin"
+
+    def test_setup_logger_with_custom_format(self):
+        """Test setup_logger with custom format string to cover line 564."""
+        from permission_storage_manager.utils.helpers import setup_logger
+
+        # Test with custom format
+        custom_format = "%(levelname)s - %(message)s"
+        logger = setup_logger("test_custom_format", "DEBUG", custom_format)
+        
+        # Verify logger is configured
+        assert logger.name == "test_custom_format"
+        assert logger.level == 10  # DEBUG level
+        
+        # Check that handler has custom format
+        handler = logger.handlers[0]
+        formatter = handler.formatter
+        assert formatter._fmt == custom_format
+
+    def test_check_dependencies_with_redis_import_error(self):
+        """Test check_dependencies when redis import fails to cover lines 632-633."""
+        from permission_storage_manager.utils.helpers import check_dependencies
+        import sys
+        from unittest.mock import patch
+
+        # Mock import error for redis
+        with patch.dict(sys.modules, {'redis': None}):
+            dependencies = check_dependencies()
+            assert dependencies["redis"] is False
+
+        # Test with redis available
+        try:
+            import redis
+            dependencies = check_dependencies()
+            assert dependencies["redis"] is True
+        except ImportError:
+            # If redis is not installed, this is expected
+            dependencies = check_dependencies()
+            assert dependencies["redis"] is False

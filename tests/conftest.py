@@ -3,14 +3,12 @@ Pytest configuration and shared fixtures for Permission Storage Manager tests.
 """
 
 import asyncio
-import json
 import os
 import tempfile
 import shutil
-from typing import List
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 try:
     import redis.asyncio as redis

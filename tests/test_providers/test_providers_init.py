@@ -7,9 +7,6 @@ from permission_storage_manager.providers import (
     get_recommended_provider,
     get_provider_info,
 )
-from permission_storage_manager.providers.memory_provider import MemoryProvider
-from permission_storage_manager.providers.file_provider import FileProvider
-from permission_storage_manager.providers.redis_provider import RedisProvider
 
 
 class TestProvidersInitExtended:

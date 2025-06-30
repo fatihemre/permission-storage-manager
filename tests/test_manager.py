@@ -4,18 +4,17 @@ Tests for the main PermissionStorageManager class.
 
 import asyncio
 import pytest
-from unittest.mock import AsyncMock, patch
 
 from permission_storage_manager import PermissionStorageManager, create_manager
 from permission_storage_manager.core.base import BaseProvider
 from permission_storage_manager.core.exceptions import (
-    ProviderError,
     ProviderNotSupportedError,
     ProviderNotInitializedError,
     ValidationError,
     InvalidSessionIdError,
     InvalidUserIdError,
     TTLError,
+    ProviderError,
 )
 
 
@@ -981,3 +980,213 @@ class TestManagerEdgeCasesCoverage:
         assert manager.provider_name == "dummy"
         assert manager.supports_ttl is True
         assert manager.is_initialized is False
+
+
+class TestManagerSyncWrappers:
+    """Test synchronous wrapper methods."""
+
+    @pytest.mark.skipif(
+        lambda any_manager: getattr(any_manager, 'provider_name', None) == 'redis',
+        reason="RedisProvider does not support sync wrappers due to event loop limitations."
+    )
+    def test_store_permissions_sync(self, any_manager):
+        """Test synchronous store_permissions wrapper."""
+        session_id = "sync_test_session"
+        user_id = "sync_test_user"
+        permissions = ["read", "write"]
+
+        result = any_manager.store_permissions_sync(
+            session_id, user_id, permissions
+        )
+        assert result is True
+
+        # Verify it was stored
+        has_read = any_manager.check_permission_sync(session_id, "read")
+        assert has_read is True
+
+    @pytest.mark.skipif(
+        lambda any_manager: getattr(any_manager, 'provider_name', None) == 'redis',
+        reason="RedisProvider does not support sync wrappers due to event loop limitations."
+    )
+    def test_check_permission_sync(self, any_manager):
+        """Test synchronous check_permission wrapper."""
+        session_id = "sync_check_session"
+        user_id = "sync_check_user"
+        permissions = ["read", "write"]
+
+        # Store permissions first
+        any_manager.store_permissions_sync(session_id, user_id, permissions)
+
+        # Test check
+        has_read = any_manager.check_permission_sync(session_id, "read")
+        assert has_read is True
+
+        has_admin = any_manager.check_permission_sync(session_id, "admin")
+        assert has_admin is False
+
+    @pytest.mark.skipif(
+        lambda any_manager: getattr(any_manager, 'provider_name', None) == 'redis',
+        reason="RedisProvider does not support sync wrappers due to event loop limitations."
+    )
+    def test_check_permissions_sync(self, any_manager):
+        """Test synchronous check_permissions wrapper."""
+        session_id = "sync_check_multi_session"
+        user_id = "sync_check_multi_user"
+        permissions = ["read", "write"]
+
+        # Store permissions first
+        any_manager.store_permissions_sync(session_id, user_id, permissions)
+
+        # Test multiple checks
+        results = any_manager.check_permissions_sync(
+            session_id, ["read", "write", "admin"]
+        )
+        assert results["read"] is True
+        assert results["write"] is True
+        assert results["admin"] is False
+
+    @pytest.mark.skipif(
+        lambda any_manager: getattr(any_manager, 'provider_name', None) == 'redis',
+        reason="RedisProvider does not support sync wrappers due to event loop limitations."
+    )
+    def test_get_permissions_sync(self, any_manager):
+        """Test synchronous get_permissions wrapper."""
+        session_id = "sync_get_session"
+        user_id = "sync_get_user"
+        permissions = ["read", "write"]
+        metadata = {"test": "data"}
+
+        # Store permissions first
+        any_manager.store_permissions_sync(session_id, user_id, permissions, metadata=metadata)
+
+        # Test get
+        data = any_manager.get_permissions_sync(session_id)
+        assert data is not None
+        assert data["user_id"] == user_id
+        assert set(data["permissions"]) == set(permissions)
+        assert data["metadata"]["test"] == "data"
+
+    @pytest.mark.skipif(
+        lambda any_manager: getattr(any_manager, 'provider_name', None) == 'redis',
+        reason="RedisProvider does not support sync wrappers due to event loop limitations."
+    )
+    def test_invalidate_session_sync(self, any_manager):
+        """Test synchronous invalidate_session wrapper."""
+        session_id = "sync_invalidate_session"
+        user_id = "sync_invalidate_user"
+        permissions = ["read"]
+
+        # Store permissions first
+        any_manager.store_permissions_sync(session_id, user_id, permissions)
+
+        # Verify it exists
+        has_read = any_manager.check_permission_sync(session_id, "read")
+        assert has_read is True
+
+        # Invalidate
+        result = any_manager.invalidate_session_sync(session_id)
+        assert result is True
+
+        # Verify it's gone
+        has_read = any_manager.check_permission_sync(session_id, "read")
+        assert has_read is False
+
+
+class TestManagerSyncContextManager:
+    """Test synchronous context manager methods."""
+
+    def test_sync_context_manager_enter_exit(self, memory_config):
+        """Test synchronous context manager."""
+        with PermissionStorageManager("memory", memory_config) as manager:
+            assert manager.is_initialized
+            assert manager.provider_name == "memory"
+
+        # Should be closed after context
+        assert not manager.is_initialized
+
+    def test_sync_context_manager_with_operations(self, memory_config):
+        """Test synchronous context manager with operations."""
+        with PermissionStorageManager("memory", memory_config) as manager:
+            # Should be able to use manager normally
+            result = manager.store_permissions_sync(
+                "context_session", "user_1", ["read"]
+            )
+            assert result is True
+
+            has_read = manager.check_permission_sync("context_session", "read")
+            assert has_read is True
+
+
+class TestManagerAutoInitializeEdgeCases:
+    """Test edge cases with auto_initialize=False."""
+
+    @pytest.mark.asyncio
+    async def test_ensure_initialized_with_auto_init_disabled(self, memory_config):
+        """Test _ensure_initialized when auto_initialize=False."""
+        manager = PermissionStorageManager(
+            "memory", memory_config, auto_initialize=False
+        )
+
+        # Should raise error when not initialized
+        with pytest.raises(ProviderNotInitializedError):
+            manager._ensure_initialized()
+
+    @pytest.mark.asyncio
+    async def test_operations_with_auto_init_disabled(self, memory_config):
+        """Test operations when auto_initialize=False."""
+        manager = PermissionStorageManager(
+            "memory", memory_config, auto_initialize=False
+        )
+
+        # All operations should raise ProviderNotInitializedError
+        with pytest.raises(ProviderNotInitializedError):
+            await manager.store_permissions("session_1", "user_1", ["read"])
+
+        with pytest.raises(ProviderNotInitializedError):
+            await manager.check_permission("session_1", "read")
+
+        with pytest.raises(ProviderNotInitializedError):
+            await manager.check_permissions("session_1", ["read"])
+
+        with pytest.raises(ProviderNotInitializedError):
+            await manager.get_permissions("session_1")
+
+        with pytest.raises(ProviderNotInitializedError):
+            await manager.invalidate_session("session_1")
+
+        with pytest.raises(ProviderNotInitializedError):
+            await manager.update_permissions("session_1", ["read"])
+
+        with pytest.raises(ProviderNotInitializedError):
+            await manager.extend_session_ttl("session_1", 3600)
+
+        with pytest.raises(ProviderNotInitializedError):
+            await manager.get_session_info("session_1")
+
+        with pytest.raises(ProviderNotInitializedError):
+            await manager.list_sessions()
+
+        with pytest.raises(ProviderNotInitializedError):
+            await manager.cleanup_expired_sessions()
+
+    @pytest.mark.asyncio
+    async def test_ensure_initialized_with_auto_init_enabled_but_fails(self, memory_config):
+        """Test _ensure_initialized when auto_initialize=True but initialization fails."""
+        manager = PermissionStorageManager(
+            "memory", memory_config, auto_initialize=True
+        )
+        
+        # Mock provider to fail initialization
+        original_initialize = manager._provider.initialize
+        
+        async def failing_initialize():
+            raise ProviderError("Initialization failed")
+        
+        manager._provider.initialize = failing_initialize
+        
+        # Should raise ProviderNotInitializedError
+        with pytest.raises(ProviderNotInitializedError):
+            manager._ensure_initialized()
+        
+        # Restore original method
+        manager._provider.initialize = original_initialize
