@@ -11,15 +11,27 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8, 3.9, 3.10, 3.11, 3.12]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
 
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Clear Python cache
+      run: |
+        sudo rm -rf /usr/local/lib/python*
+        sudo rm -rf /opt/hostedtoolcache/Python
+        echo "Python cache cleared"
     
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+    
+    - name: Verify Python version
+      run: |
+        python --version
+        which python
     
     - name: Install dependencies
       run: |
@@ -42,10 +54,22 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Clear Python cache
+      run: |
+        sudo rm -rf /usr/local/lib/python*
+        sudo rm -rf /opt/hostedtoolcache/Python
+        echo "Python cache cleared"
+    
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: 3.11
+        python-version: "3.11"
+        cache: 'pip'
+    
+    - name: Verify Python version
+      run: |
+        python --version
+        which python
     
     - name: Install dependencies
       run: |
@@ -66,10 +90,22 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
+    - name: Clear Python cache
+      run: |
+        sudo rm -rf /usr/local/lib/python*
+        sudo rm -rf /opt/hostedtoolcache/Python
+        echo "Python cache cleared"
+    
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: 3.11
+        python-version: "3.11"
+        cache: 'pip'
+    
+    - name: Verify Python version
+      run: |
+        python --version
+        which python
     
     - name: Install build dependencies
       run: |
